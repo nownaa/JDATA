@@ -1,0 +1,347 @@
+
+<style>
+  h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  .wrap{font-family:var(--font-sans);padding:1rem 0}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .brand{display:flex;align-items:center;gap:8px}
+  .brand-icon{width:28px;height:28px;background:#3B6D11;border-radius:6px;display:flex;align-items:center;justify-content:center}
+  .brand-icon span{color:#C0DD97;font-size:13px;font-weight:500;font-family:var(--font-mono)}
+  .brand-name{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+  .brand-sub{font-size:12px;color:var(--color-text-tertiary)}
+  .header-actions{display:flex;gap:8px;align-items:center}
+  .badge-pyodide{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-tertiary)}
+  .tabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+  .tab{font-size:12px;padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+  .tab:hover{background:var(--color-background-secondary)}
+  .tab.active{background:#EAF3DE;color:#3B6D11;border-color:#97C459}
+  .editor-wrap{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:8px}
+  .editor-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+  .editor-dots{display:flex;gap:5px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot-r{background:#E24B4A}.dot-y{background:#EF9F27}.dot-g{background:#639922}
+  .editor-label{font-size:11px;color:var(--color-text-tertiary);font-family:var(--font-mono)}
+  .editor-inner{display:flex;position:relative}
+  .line-nums{padding:10px 8px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);font-size:12px;font-family:var(--font-mono);color:var(--color-text-tertiary);line-height:1.6;text-align:right;min-width:36px;user-select:none;white-space:pre}
+  #code-editor{width:100%;min-height:200px;padding:10px 12px;border:none;outline:none;font-size:13px;font-family:var(--font-mono);line-height:1.6;resize:vertical;background:var(--color-background-primary);color:var(--color-text-primary);tab-size:4}
+  .run-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .btn-run{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--border-radius-md);border:0.5px solid #639922;background:#EAF3DE;color:#3B6D11;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+  .btn-run:hover{background:#C0DD97}
+  .btn-run:active{transform:scale(.98)}
+  .btn-run.loading{opacity:.7;cursor:not-allowed}
+  .btn-clear{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-secondary);font-size:13px;cursor:pointer;transition:all .15s}
+  .btn-clear:hover{background:var(--color-background-secondary)}
+  .shortcut{font-size:11px;color:var(--color-text-tertiary);font-family:var(--font-mono)}
+  .output-wrap{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+  .output-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+  .output-title{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono);display:flex;align-items:center;gap:6px}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--color-border-tertiary)}
+  .status-dot.ok{background:#639922}.status-dot.err{background:#E24B4A}.status-dot.run{background:#EF9F27;animation:pulse .8s infinite alternate}
+  @keyframes pulse{from{opacity:.4}to{opacity:1}}
+  #output{padding:10px 12px;min-height:120px;max-height:280px;overflow-y:auto;font-size:12px;font-family:var(--font-mono);line-height:1.7;color:var(--color-text-primary);white-space:pre-wrap;word-break:break-all}
+  .out-line{display:block}
+  .out-err{color:#A32D2D}
+  .out-info{color:var(--color-text-tertiary);font-size:11px}
+  .out-ok{color:#3B6D11}
+  .loading-bar{height:2px;background:linear-gradient(90deg,#639922,#C0DD97,#639922);background-size:200%;animation:slide 1s linear infinite;display:none}
+  @keyframes slide{from{background-position:0%}to{background-position:200%}}
+  .loading-bar.active{display:block}
+  .stats-row{display:flex;gap:8px;margin-top:8px}
+  .stat-card{flex:1;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 12px}
+  .stat-label{font-size:11px;color:var(--color-text-tertiary)}
+  .stat-val{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+</style>
+
+<div class="wrap">
+  <h2 class="sr-only">파이썬 코딩 센터 — 브라우저에서 파이썬 코드를 작성하고 실행하세요</h2>
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon"><span>Py</span></div>
+      <div>
+        <div class="brand-name">나만의 코딩 센터</div>
+        <div class="brand-sub">Python in-browser IDE</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="badge-pyodide" id="pyodide-status">⏳ 로딩 중...</span>
+    </div>
+  </div>
+
+  <div class="tabs" id="template-tabs"></div>
+
+  <div class="editor-wrap">
+    <div class="editor-bar">
+      <div class="editor-dots">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      </div>
+      <div class="editor-label">main.py</div>
+      <div></div>
+    </div>
+    <div class="editor-inner">
+      <div class="line-nums" id="line-nums">1</div>
+      <textarea id="code-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+    </div>
+  </div>
+
+  <div class="run-bar">
+    <div style="display:flex;gap:8px">
+      <button class="btn-run" id="run-btn" onclick="runCode()">
+        <i class="ti ti-player-play" aria-hidden="true"></i> 실행
+      </button>
+      <button class="btn-clear" onclick="clearOutput()">
+        <i class="ti ti-trash" aria-hidden="true"></i> 지우기
+      </button>
+    </div>
+    <span class="shortcut">Ctrl + Enter</span>
+  </div>
+
+  <div class="output-wrap">
+    <div class="loading-bar" id="loading-bar"></div>
+    <div class="output-bar">
+      <div class="output-title">
+        <div class="status-dot" id="status-dot"></div>
+        출력 결과
+      </div>
+      <div style="font-size:11px;color:var(--color-text-tertiary)" id="exec-time"></div>
+    </div>
+    <div id="output"><span class="out-info">▶ 코드를 작성하고 실행 버튼을 누르세요</span></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">실행 횟수</div><div class="stat-val" id="run-count">0</div></div>
+    <div class="stat-card"><div class="stat-label">줄 수</div><div class="stat-val" id="line-count">1</div></div>
+    <div class="stat-card"><div class="stat-label">마지막 실행</div><div class="stat-val" id="last-time">-</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+<script>
+const templates = [
+  {name:"👋 시작하기", code:`# 파이썬 기초 예제
+print("안녕하세요! 나만의 코딩 센터입니다 🎉")
+
+name = "파이썬"
+version = 3.12
+print(f"{name} {version} 에 오신 것을 환영합니다!")
+
+# 간단한 계산
+numbers = [1, 2, 3, 4, 5]
+total = sum(numbers)
+avg = total / len(numbers)
+print(f"합계: {total}, 평균: {avg}")`},
+  {name:"📊 데이터 분석", code:`# 통계 분석 예제
+import statistics
+
+scores = [85, 92, 78, 96, 88, 74, 91, 83, 79, 95]
+
+print("=== 시험 점수 분석 ===")
+print(f"학생 수: {len(scores)}명")
+print(f"최고점: {max(scores)}점")
+print(f"최저점: {min(scores)}점")
+print(f"평균: {statistics.mean(scores):.1f}점")
+print(f"중앙값: {statistics.median(scores)}점")
+print(f"표준편차: {statistics.stdev(scores):.2f}")
+
+grade = lambda s: 'A' if s>=90 else 'B' if s>=80 else 'C' if s>=70 else 'D'
+print("\\n=== 등급별 분포 ===")
+from collections import Counter
+dist = Counter(grade(s) for s in scores)
+for g in ['A','B','C','D']:
+    print(f"{g}: {'█'*dist.get(g,0)} ({dist.get(g,0)}명)")`},
+  {name:"🔄 반복문", code:`# 반복문과 조건문
+print("=== 구구단 (2~5단) ===")
+for i in range(2, 6):
+    row = "  ".join(f"{i}×{j}={i*j:2d}" for j in range(1, 10))
+    print(row)
+
+print("\\n=== FizzBuzz (1~30) ===")
+result = []
+for n in range(1, 31):
+    if n % 15 == 0:
+        result.append("FizzBuzz")
+    elif n % 3 == 0:
+        result.append("Fizz")
+    elif n % 5 == 0:
+        result.append("Buzz")
+    else:
+        result.append(str(n))
+print(", ".join(result))`},
+  {name:"🏗️ 클래스", code:`# 객체지향 프로그래밍
+class BankAccount:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+        self.history = []
+    
+    def deposit(self, amount):
+        self.balance += amount
+        self.history.append(f"+{amount:,}원")
+        return self
+    
+    def withdraw(self, amount):
+        if amount > self.balance:
+            print("잔액이 부족합니다!")
+            return self
+        self.balance -= amount
+        self.history.append(f"-{amount:,}원")
+        return self
+    
+    def __repr__(self):
+        return f"[{self.owner}] 잔액: {self.balance:,}원"
+
+acc = BankAccount("김철수", 10000)
+acc.deposit(50000).deposit(25000).withdraw(15000)
+print(acc)
+print("거래 내역:", " → ".join(acc.history))`},
+  {name:"🔢 알고리즘", code:`# 정렬 알고리즘 비교
+import time, random
+
+def bubble_sort(arr):
+    a = arr.copy()
+    for i in range(len(a)):
+        for j in range(len(a)-i-1):
+            if a[j] > a[j+1]:
+                a[j], a[j+1] = a[j+1], a[j]
+    return a
+
+def quick_sort(arr):
+    if len(arr) <= 1: return arr
+    p = arr[len(arr)//2]
+    return quick_sort([x for x in arr if x<p]) + [x for x in arr if x==p] + quick_sort([x for x in arr if x>p])
+
+data = random.sample(range(1000), 200)
+print(f"데이터 수: {len(data)}개")
+
+t1 = time.time(); bubble_sort(data); t1 = time.time()-t1
+t2 = time.time(); quick_sort(data); t2 = time.time()-t2
+
+print(f"버블 정렬: {t1*1000:.2f}ms")
+print(f"퀵 정렬:   {t2*1000:.2f}ms")
+print(f"속도 차이: {t1/t2:.1f}배 (퀵 정렬이 더 빠름)")
+print("\\n상위 10개:", sorted(data)[-10:])`},
+];
+
+let pyodide = null;
+let runCount = 0;
+
+const editor = document.getElementById("code-editor");
+const lineNums = document.getElementById("line-nums");
+const output = document.getElementById("output");
+const runBtn = document.getElementById("run-btn");
+const statusDot = document.getElementById("status-dot");
+const loadingBar = document.getElementById("loading-bar");
+const execTimeEl = document.getElementById("exec-time");
+
+function updateLineNums(){
+  const lines = editor.value.split("\n").length;
+  lineNums.textContent = Array.from({length:lines},(_,i)=>i+1).join("\n");
+  document.getElementById("line-count").textContent = lines;
+}
+
+editor.addEventListener("input", updateLineNums);
+editor.addEventListener("keydown", e=>{
+  if(e.key==="Tab"){e.preventDefault();const s=editor.selectionStart;editor.value=editor.value.slice(0,s)+"    "+editor.value.slice(editor.selectionEnd);editor.selectionStart=editor.selectionEnd=s+4;updateLineNums();}
+  if(e.ctrlKey&&e.key==="Enter"){runCode();}
+});
+
+const tabs = document.getElementById("template-tabs");
+templates.forEach((t,i)=>{
+  const btn = document.createElement("button");
+  btn.className = "tab" + (i===0?" active":"");
+  btn.textContent = t.name;
+  btn.onclick = ()=>{
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    editor.value = t.code;
+    updateLineNums();
+    clearOutput();
+  };
+  tabs.appendChild(btn);
+});
+
+editor.value = templates[0].code;
+updateLineNums();
+
+async function initPyodide(){
+  try{
+    pyodide = await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.25.1/full/"});
+    document.getElementById("pyodide-status").textContent = "✅ 준비 완료";
+  }catch(e){
+    document.getElementById("pyodide-status").textContent = "❌ 로드 실패";
+  }
+}
+
+function clearOutput(){
+  output.innerHTML = '<span class="out-info">▶ 코드를 작성하고 실행 버튼을 누르세요</span>';
+  statusDot.className = "status-dot";
+  execTimeEl.textContent = "";
+}
+
+async function runCode(){
+  if(!pyodide){addLine("⏳ 파이썬 엔진 로딩 중... 잠시 후 다시 시도하세요","out-info");return;}
+  const code = editor.value;
+  if(!code.trim()) return;
+  
+  runBtn.classList.add("loading");
+  loadingBar.classList.add("active");
+  statusDot.className = "status-dot run";
+  output.innerHTML = '<span class="out-info">⚙️ 실행 중...</span>';
+  execTimeEl.textContent = "";
+
+  const t0 = performance.now();
+  try{
+    let logs = [];
+    pyodide.globals.set("__print_log__", logs);
+    pyodide.runPython(`
+import sys, io
+_old_stdout = sys.stdout
+sys.stdout = io.StringIO()
+`);
+    pyodide.runPython(code);
+    const captured = pyodide.runPython(`
+_v = sys.stdout.getvalue()
+sys.stdout = _old_stdout
+_v
+`);
+    const ms = (performance.now()-t0).toFixed(1);
+    output.innerHTML = "";
+    if(captured){
+      captured.split("\n").forEach(line=>{
+        const s = document.createElement("span");
+        s.className = "out-line";
+        s.textContent = line;
+        output.appendChild(s);
+      });
+    }else{
+      addLine("(출력 없음)","out-info");
+    }
+    addLine(`\n✓ 실행 완료 (${ms}ms)`,"out-ok");
+    statusDot.className = "status-dot ok";
+    execTimeEl.textContent = ms+"ms";
+  }catch(err){
+    const ms = (performance.now()-t0).toFixed(1);
+    output.innerHTML = "";
+    const msg = err.message||String(err);
+    msg.split("\n").forEach(line=>{const s=document.createElement("span");s.className="out-line out-err";s.textContent=line;output.appendChild(s);});
+    addLine(`\n✗ 오류 발생 (${ms}ms)`,"out-err");
+    statusDot.className = "status-dot err";
+    execTimeEl.textContent = ms+"ms";
+  }
+
+  runBtn.classList.remove("loading");
+  loadingBar.classList.remove("active");
+  runCount++;
+  document.getElementById("run-count").textContent = runCount;
+  document.getElementById("last-time").textContent = new Date().toLocaleTimeString("ko-KR");
+}
+
+function addLine(text, cls){
+  const s = document.createElement("span");
+  s.className = "out-line " + cls;
+  s.textContent = text;
+  output.appendChild(s);
+}
+
+initPyodide();
+</script>
